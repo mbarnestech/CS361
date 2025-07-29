@@ -1,3 +1,4 @@
 *.env
 *.pickle
 *.csv
+*_pycache*
