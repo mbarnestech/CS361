@@ -164,11 +164,11 @@ class ToDoList:
         """
         return len(self.tasks) == 0
     
-    def add_task(self, name, value, time):
+    def add_task(self, task):
         """
         adds a task to the list
         """
-        self.tasks.append(Task(name, value, time))
+        self.tasks.append(task)
     
     def clear_list(self):
         """
@@ -212,7 +212,7 @@ class Lists:
         initializes class
         """
         self.name = name
-        self.lists = {}
+        self.lists = {active.owner: [active]}
         self.active = active
 
     def add_list(self, list):
@@ -235,10 +235,10 @@ class Lists:
         count = 1
         if user != universal:
             for list in self.lists[user]:
-                list_dict[count] = list.name
+                list_dict[count] = list
                 count+=1
         for list in self.lists[universal]:
-            list_dict[count] = list.name
+            list_dict[count] = list
             count+=1
         
         return list_dict

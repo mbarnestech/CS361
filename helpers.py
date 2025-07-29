@@ -78,3 +78,4 @@ def is_float(time):
         return True
     except ValueError:
         return False
+    
