@@ -1,6 +1,7 @@
 import os
 import pickle
 import sys
+import zmq
 
 # --------- terminal / system helpers -------------
 def clear_terminal():
@@ -14,6 +15,17 @@ def exit_program():
     exits the program with a code of 0 (success)
     """
     sys.exit(0)
+
+def set_up_client(portEnv):
+    """
+    sets up individual zeromq client
+    """
+    port = os.getenv(portEnv)
+    context = zmq.Context()
+    print(f"Client attempting to connect to server on port {port}")
+    client = context.socket(zmq.REQ) # REQ is the request socket
+    client.connect(f"tcp://localhost:{port}")
+    return client
 
 # --------- in-service file storage helpers -------------
 def pickle_obj(obj):

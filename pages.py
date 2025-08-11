@@ -1,6 +1,16 @@
 from to_do_list import Lists, ToDoList, Task
 import helpers
-import imports
+import os
+import zmq
+from dotenv import load_dotenv
+
+load_dotenv()
+client_A = helpers.set_up_client("PORT_A")
+client_B = helpers.set_up_client("PORT_B")
+client_C = helpers.set_up_client("PORT_C")
+client_D = helpers.set_up_client("PORT_D")
+
+
 
 def welcome_page():
     """
@@ -16,6 +26,68 @@ def welcome_page():
     print("")
     _ = input("Press 'return' to continue: ")
     options_page(lists)
+def change_user_page(lists):
+    helpers.clear_terminal()
+    
+    # Show options to user
+    options = [
+                ("Create New User", create_user_page),
+                ("Login as Existing User", login_page)
+                ("Logout", logout_page)
+                ("Go Back to Options Page.", options_page),
+                ("Exit Program.", exit_page)
+            ]
+    input_text = "Enter the number representing your choice: "
+    option = helpers.get_option_num(options, input_text)
+    
+    # Direct user to requested page
+    options[int(option)-1][1](lists)
+
+def login_page(lists):
+    pass
+
+def create_user_page(lists):
+    pass
+
+def logout_page(lists):
+    helpers.clear_terminal()
+    print(f"You are currently logged in as {lists.active_user}.")
+    answer = input(f"Are you sure you want to logout? (y/n)? ")
+    while answer not in ["y","n"]:
+        print("invalid response, please enter 'y' or 'n'.")
+        answer = input("Do you wish to logout (y/n)? ")
+    if answer == "n":
+        options_page(lists)
+    else:
+        client_B.send_pyobj({"action": "logout"})
+        data = client_B.recv_pyobj()
+        if data["status"] != "success":
+            print("logout failed")
+        else:
+            print(f"You have successfully logged out.")
+    
+
+
+        
+def add_item_info_page(lists):
+    """
+    Provides user with information about adding an item 
+    prior to actually adding the item
+    """
+    helpers.clear_terminal()
+    print("To add a task, you will be asked to provide the name of the task, the value of the task (integer between 1 and 10), and the time in hours the task is expected to take.")
+    
+    # Show options to user
+    options = [
+                ("Continue to add a task.", add_item_page),
+                ("Go Back to Options Page.", options_page),
+                ("Exit Program.", exit_page)
+            ]
+    input_text = "Enter the number representing your choice: "
+    option = helpers.get_option_num(options, input_text)
+    
+    # Direct user to requested page
+    options[int(option)-1][1](lists)
 
 def add_item_page(lists):
     """
@@ -52,7 +124,7 @@ def add_item_page(lists):
             _ = input("Press 'return' to continue: ")
             options_page(lists)
         case "2":
-            add_item_page(lists)
+            add_item_info_page(lists)
         case "3":
             options_page(lists)
         case "4":
@@ -65,7 +137,6 @@ def edit_item_page(lists):
     helpers.clear_terminal()
     helpers.print_current_list(lists.active)
     
-
     pass
 
 def clear_list_page(lists):
@@ -146,12 +217,12 @@ def create_list_page(lists):
         print("invalid response, please enter 'm' or 'i'.")
         answer = input("Would you like to manually create a list (m) or import one (i)? ")
     if answer == "m":
-        new_list = ToDoList(name)
-        lists.add_list(new_list)
-        lists.active = new_list
-        print(f"Successfully created new list; {lists.active.name} is now the active list")
+        manual_list = ToDoList(name)
+        lists.add_list(manual_list)
+        print(f"Successfully created new list; {lists.active} is now the active list")
     else:
-        data = imports.handle_import()
+        client_A.send_pyobj({"action":"import"})
+        data = client_A.recv_pyobj()
         if data["status"] != "success":
             print("import failed")
         else:
@@ -166,11 +237,10 @@ def create_list_page(lists):
                 if line["actual_time"] != "":
                     newTask.update_actual_time(line["actual_time"])
                 if line["status"] != "":
-                    newTask.update_status(line["actual_time"])
+                    newTask.update_status(line["status"])
                 new_list.add_task(newTask)
                 print(f"{newTask} added to list.")
             lists.add_list(new_list)
-            lists.active = new_list
     
     _ = input("Press 'return' to continue: ")
     options_page(lists)
@@ -180,14 +250,17 @@ def export_list_page(lists):
     export list to csv using microservice 1
     """
     helpers.clear_terminal()
-    pass
+    task_list = [task.task_to_dict() for task in lists.active.tasks]
+    client_A.send_pyobj({"action":"export", "data": task_list})
+    response = client_A.recv_pyobj()
+    if response["status"] != "success":
+        print("import failed")
+    else:
+        print(response["message"])
 
-def import_list_page(lists):
-    """
-    import list from csv using microservice 1
-    """
-    helpers.clear_terminal()
-    pass
+    _ = input("Press 'return' to continue: ")
+    options_page(lists)
+
 
 def switch_list_page(lists):
     """
@@ -216,6 +289,8 @@ def exit_page(lists):
     helpers.clear_terminal()
     print("Thank you for using the To-Do List App! Goodbye.")
     helpers.pickle_obj(lists)
+    client_B.send_pyobj({"action": "pickle"})
+    client_C.send_pyobj({"action": "pickle"})
     helpers.exit_program()
 
 def options_page(lists):
@@ -227,12 +302,13 @@ def options_page(lists):
 
     # Show options to user
     options = [("View To-Do List", view_list_page),
-           ("Add task to To-Do List.", add_item_page),
+           ("Add task to To-Do List.", add_item_info_page),
            ("Edit task on To-Do List.", edit_item_page),
            ("Switch Active To-Do List.", switch_list_page),
            ("Export current To-Do List.", export_list_page),
            ("Clear tasks from current To-Do List.", clear_list_page),
            ("Undo last deletion.", undo_page),
+           ("Change User", change_user_page)
            ("Exit Program.", exit_page)
         ]
     input_text = "Enter the number representing your choice: "    

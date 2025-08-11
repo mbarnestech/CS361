@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 universal = "Public"
 
 class Task:
@@ -22,7 +24,7 @@ class Task:
         """
         sets string representation of the class
         """
-        return f"Name = '{self.name}', Status = {self.status}"
+        return f"Name = '{self.name}', {self.value=}, {self.estimated_time=}, {self.actual_time=}, Status = {self.status}"
     
     def task_to_dict(self):
         """
@@ -212,14 +214,17 @@ class Lists:
         initializes class
         """
         self.name = name
-        self.lists = {active.owner: [active]}
-        self.active = active
+        self.lists = defaultdict(list)
+        self.lists[active.owner].append(active)
+        self.active_list = active
+        self.active_user = active.owner
 
     def add_list(self, list):
         """
         add a to-do list to the lists
         """
-        self.lists.setdefault(list.owner, []).append(list)
+        self.lists[list.owner].append(list)
+        self.active_list = list
     
     def is_empty(self):
         """
