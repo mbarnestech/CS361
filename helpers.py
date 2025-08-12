@@ -2,6 +2,9 @@ import os
 import pickle
 import sys
 import zmq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --------- terminal / system helpers -------------
 def clear_terminal():
@@ -72,11 +75,11 @@ def get_option_num(options, input_text):
     
     return option
 
-def print_current_list(current):
+def print_current(current, user):
     """
     prints information on current list
     """
-    print(f"Your current To-Do List is {current.name} and is owned by {current.owner}.")
+    print(f"Your current To-Do List is {current.name} owned by {current.owner}; you are viewing as {user}.")
     print("")
 
 

@@ -10,21 +10,20 @@ class Task:
     in_progress = "In Progress"
     completed = "Completed"
 
-    def __init__(self, name, value, estimated_time, actual_time=None, status=not_started):
+    def __init__(self, name, value, time, status=not_started):
         """
         initializes class
         """
         self.name = name
         self.value = value
-        self.estimated_time = estimated_time
-        self.actual_time = actual_time
+        self.time = time
         self.status = status
 
     def __str__(self):
         """
         sets string representation of the class
         """
-        return f"Name = '{self.name}', {self.value=}, {self.estimated_time=}, {self.actual_time=}, Status = {self.status}"
+        return f"Name = '{self.name}', {self.value=}, {self.time=}, Status = {self.status}"
     
     def task_to_dict(self):
         """
@@ -32,34 +31,15 @@ class Task:
         """
         return {"name": self.name,
                 "value": self.value,
-                "estimated_time": self.estimated_time,
-                "actual_time": self.actual_time,
+                "time": self.time,
                 "status": self.status}
     
-    def update_name(self, new_name):
+    def update_time(self, new_time):
         """
-        update task name
+        update task time
         """
-        self.name = new_name
-    
-    def update_value(self, new_value):
-        """
-        update task value
-        """
-        self.value = new_value
+        self.time = new_time
 
-    def update_estimated_time(self, new_estimated_time):
-        """
-        update task estimated time
-        """
-        self.estimated_time = new_estimated_time
-
-    def update_actual_time(self, new_actual_time):
-        """
-        update task actual time
-        """
-        self.actual_time = new_actual_time
-    
     def update_status(self, new_status):
         """
         update task status
@@ -107,49 +87,20 @@ class ToDoList:
         removed_task = self.tasks.pop(num)
         return removed_task
     
-    def update_task_name(self, num, new_name):
+    def update_task_time(self, num, new_time):
         """
-        allows user to update task name with the ability to undo later
-        """
-        if not self.valid_num(num):
-            return "invalid num"
-        self.save_undo(num)
-        self.tasks[num].name = new_name
-    
-    def update_task_value(self, num, new_value):
-        """
-        allows user to update task value with the ability to undo later
+        allows user to update time with the ability to undo later
         """
         if not self.valid_num(num):
             return "invalid num"
-        self.save_undo(num)
-        self.tasks[num].value = new_value
+        self.tasks[num].time = new_time
 
-    def update_task_estimated_time(self, num, new_estimated_time):
-        """
-        allows user to update estimated time with the ability to undo later
-        """
-        if not self.valid_num(num):
-            return "invalid num"
-        self.save_undo(num)
-        self.tasks[num].estimated_time = new_estimated_time
-
-    def update_task_actual_time(self, num, new_actual_time):
-        """
-        allows user to update actual time with the ability to undo later
-        """
-        if not self.valid_num(num):
-            return "invalid num"
-        self.save_undo(num)
-        self.tasks[num].actual_time = new_actual_time
-    
     def update_task_status(self, num, new_status):
         """
         allows user to update status with the ability to undo later
         """
         if not self.valid_num(num):
             return "invalid num"
-        self.save_undo(num)
         self.tasks[num].status = new_status
 
     def valid_num(self, num):
@@ -248,4 +199,16 @@ class Lists:
         
         return list_dict
 
-
+    def get_time_and_completion_lists(self):
+        print('getting time and completion list')
+        tc_list = []
+        if self.active_user != universal:
+            for list in self.lists[self.active_user]:
+                for task in list.tasks:
+                    tc_list.apppend([task.name, task.time, task.status])
+                    print(tc_list)
+        for list in self.lists[universal]:
+                for task in list.tasks:
+                    tc_list.append([task.name, task.time, task.status])
+                    print(tc_list)
+        return tc_list
